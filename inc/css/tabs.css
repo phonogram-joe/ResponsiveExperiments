@@ -1,0 +1,26 @@
+/* tabs */
+.tab_group {
+	margin-bottom: 1em;
+	padding-bottom: 1em;
+	border: 1px solid #ccc;
+}
+.tab_group .tab_nav {
+	overflow: hidden;
+	margin: 0 0 10px 0;
+	list-style: none;
+}
+.tab_group .tab_nav li {
+	float: left;
+	margin: 0 10px 0 0;
+}
+.tab_group .tab_nav li.last {
+	margin:right: 0;
+}
+.tab_group .tab_nav a {
+	display: block;
+}
+.tab_group .inactive {
+	position: absolute;
+	top: -9999px;
+	left: -9999px;
+}
