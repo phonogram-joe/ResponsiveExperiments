@@ -1,3 +1,7 @@
+/*
+	Copyright Joseph C. Savona 2011-2012
+	redistribution or use without author's permission is NOT allowed.
+*/
 (function($) {
 	var context = this,
 		PLUGIN_NAME = 'googlemap',
