@@ -72,13 +72,23 @@
 
 		<p>A google maps plugin for jQuery</p>
 
-		<div class="google_map" data-center="34.394299,132.457901" data-zoom="14" data-mapheight="400">
+		<div id="mapOne" class="googlemap" data-noscroll="noscroll" data-center="34.394299,132.457901" data-zoom="14" data-mapheight="400">
 			<ul>
-				<li data-geo="34.39950924,132.4620938" data-icon="http://renew.hirogin.phonogram.tv/inc/images/atm_search/atm.png" title="広島合同庁舎（共同）">
+				<li class="map_autoopen" data-geo="34.39950924,132.4620938" data-icon="http://renew.hirogin.phonogram.tv/inc/images/atm_search/atm.png" title="広島合同庁舎（共同）">
 					<b>広島合同庁舎（共同）</b></a><br>〒7300012<br>広島市中区上八丁堀６−３０
+				</li>
+				<li data-geo="34.394299,132.457901" data-icon="http://renew.hirogin.phonogram.tv/inc/images/atm_search/bank.png" title="本店営業部">
+					<a href="http://renew.hirogin.phonogram.tv/atm_search?act=Detail&amp;atm_code=00100000"><b>本店営業部</b></a><br>〒7308588<br>広島市中区紙屋町１−３−８
 				</li>
 			</ul>
 		</div>
+
+		<p>
+			<a href="#" onclick="$('#mapOne').googlemap('showMarker','本店営業部');return false;">本店営業部</a><br />
+			<a href="#" onclick="$('#mapOne').googlemap('closeWindow');return false;">情報ウィンドーを閉じる</a><br />
+			<a href="#" onclick="$('#mapOne').googlemap('remove');return false;">マップを閉じる</a><br />
+			<a href="#" onclick="$('#mapOne').googlemap();return false;">マップに変換</a>
+		</p>
 	</article>
 
 	<section id="sidebar">
@@ -100,7 +110,8 @@
 	<script src="inc/js/libs/jquery-1.7.1.js"></script>
 	<script src="inc/js/libs/underscore-1.2.3.min.js"></script>
 	<script src="inc/js/libs/backbone-0.5.3.min.js"></script>
-	<script src="inc/js/googlemap.jquery.js" data-autoload="false"></script>
+	<!--<script src="inc/js/googlemap.jquery.js" data-googlemap_autoload="off"></script>-->
+	<script src="inc/js/googlemap.jquery.js" data-googlemap_autoload="on"></script>
 	<script src="inc/js/organictab.jquery.js"></script>
 	<script src="inc/js/init.js"></script>
 <!-- DISABLE GOOGLE ANALYTICS

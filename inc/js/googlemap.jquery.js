@@ -22,7 +22,7 @@
 	 *		$wrapper: 	jQuery element representing a div in which to display
 	 *			a google map. div must use the following html structure:
 	 *
-	 *	<div class="google_map" data-center="34,120" data-zoom="14" data-mapheight="400">
+	 *	<div class="googlemap" data-center="34,120" data-zoom="14" data-mapheight="400">
 	 *		<ul>
 	 *			<li data-geo="34,120" data-icon="/inc/img/marker.png" title="Tokaichi">
 	 *				...flexible html, this is an example...
@@ -34,16 +34,18 @@
 	 *	</div>
 	 *
 	 *	map options set through the following (@ = attribute, # = property):
-	 *		.google_map @data-center: geolocation for the center point of the map.
+	 *		.googlemap @data-center: geolocation for the center point of the map.
 	 *			in "latitude,longitude" format
-	 *		.google_map @data-zoom: numeric zoom level to use for the map
-	 *		.google_map @data-mapheight: height (px) for the map
+	 *		.googlemap @data-noscroll: if a truthy value is given, prevent
+	 *			mousewheel scroll will not zoom the map.
+	 *		.googlemap @data-zoom: numeric zoom level to use for the map
+	 *		.googlemap @data-mapheight: height (px) for the map
 	 *		li @data-geo: geolocation of the marker in "latitude,longitude" format
 	 *		li @data-icon: optional. image to use for marker icons on the map
 	 *		li @title: (short) title/tooltip when user hovers over the marker w/o clicking
 	 *		li #innerHTML: html to show without marker popup info window
 	 *
-	 *	note: initial size of the map is determined by the size of the .google_map
+	 *	note: initial size of the map is determined by the size of the .googlemap
 	 *		div, and map will be automatically resized when window size changes. the actual
 	 *		map will be a child div of $wrapper.
 	 */
@@ -52,12 +54,13 @@
 		this.$mapDiv = $('<div></div>');
 		this.$mapDiv.height(this.$wrapper.data('mapheight'));
 		this.map = null;
+		this.center = null;
 		
 		this.$wrapper.addClass('map_loading');
 	}
 	GoogleMap.MapView.prototype = {
 		init: function() {
-			if (this.map != null) return;
+			if (this.map != null || API_LOAD_STATUS !== STATUSES.LOADED) return;
 			this.$wrapper.removeClass('map_loading');
 			this.$wrapper.addClass('map_active');
 			this.$wrapper.children().hide();
@@ -67,13 +70,15 @@
 			this.initMap();
 			this.initInfoView();
 			this.initMarkerViews();
+			this.openDefaultMarker();
 		},
 
 		initMap: function() {
 			var mapOptions = {
 				center: GoogleMap.utils.geoToLatLng(this.$wrapper.data('center')),
-				zoom: this.$wrapper.data('zoom'),
-				mapTypeId: google.maps.MapTypeId.ROADMAP
+				zoom: this.$wrapper.data('zoom') || 14,
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				scrollwheel: this.$wrapper.data('noscroll') ? false : true
 			};
 			this.map = new google.maps.Map(this.$mapDiv.get(0), mapOptions);
 		},
@@ -90,14 +95,25 @@
 				var listMarkerData;
 				$listMarker = $(this);
 				listMarkerData = {
-					position: GoogleMap.utils.geoToLatLng($listMarker.data('geo')),
 					map: thisMapView.map,
+					position: GoogleMap.utils.geoToLatLng($listMarker.data('geo')),
 					infoHtml: $listMarker.html(),
-					title: $listMarker.attr('title')
-				}
+					title: $listMarker.attr('title'),
+					icon: $listMarker.data('icon')
+				};
 				markers[listMarkerData.title] = new GoogleMap.MarkerView(thisMapView, listMarkerData);
 			});
 			this.markers = markers;
+		},
+
+		openDefaultMarker: function() {
+			var defaultMarkerTitle = this.$wrapper.find('.map_autoopen').attr('title'),
+				markerView;
+			if (defaultMarkerTitle != null && defaultMarkerTitle.length > 0 && this.markers.hasOwnProperty(defaultMarkerTitle)) {
+				markerView = this.markers[defaultMarkerTitle];
+				this.map.setCenter(markerView.marker.getPosition());
+				this.showInfoWindow(defaultMarkerTitle);
+			}
 		},
 
 		updateLayout: function() {
@@ -126,7 +142,7 @@
 		 *		close the info window if open.
 		 */
 		closeInfoWindow: function() {
-			
+			this.infoView.close();
 		},
 
 		/*
@@ -162,8 +178,9 @@
 			}
 			this.$wrapper
 				.removeClass('map_loading map_active')
-				.data(PLUGIN_NAME, null)
 				.children().show();
+			//TODO: may potentially want to also remove the data value saved,
+			//as well as removing the map from the ALL_MAPS array
 		}	
 	}
 
@@ -268,11 +285,11 @@
 				this.currentMarkerView = markerView;
 			} else {
 				//clicking on the marker for which window is closes the window
-				this.hide();
+				this.close();
 			}
 		},
 		
-		hide: function() {
+		close: function() {
 			this.currentMarkerView = null;
 			this.infoWindow.close();
 		},
@@ -313,11 +330,12 @@
 		loadApi: function() {
 			var script;
 			if (API_LOAD_STATUS !== STATUSES.UNLOADED) return;
+			API_LOAD_STATUS = STATUSES.LOADING;
+			
 			script = document.createElement('script');
 			script.type = 'text/javascript';
 			script.src = API_URL;
 			document.body.appendChild(script);
-			API_LOAD_STATUS = STATUSES.LOADING;
 			
 			//set a timeout of 1 minute after which we consider the library to have failed loading
 			window.setTimeout(function() {
@@ -362,14 +380,46 @@
 		 */
 		onApiError: function() {
 			API_LOAD_STATUS = STATUSES.ERROR;
-			for (var mapIndex = 0; mapIndex < ALL_MAPS.lenth; mapIndex++) {
+			for (var mapIndex = 0; mapIndex < ALL_MAPS.length; mapIndex++) {
 				ALL_MAPS[mapIndex].remove();
 			}
 			ALL_MAPS = [];
 		}
 	}
 
+	/*
+	 *	$.googlemap
+	 *		provides direct access to all of the plugin classes and functions
+	 */
 	$[PLUGIN_NAME] = GoogleMap;
+
+	/*
+	 *	$.fn.googlemap()
+	 *
+	 *	$('selector').googlemap()
+	 *		jquery method for converting an appropriately-structured HTML div
+	 *		into a google maps v3 map. plugin provides initialize-by-default
+	 *		behavior for any divs with a class of 'googlemap'.
+	 *		if you disable the auto-load feature, or create a map div after
+	 *		page load, you can call this method to initialize the map.
+	 *
+	 *	$('selector').googlemap('method'[, params])
+	 *		call methods against a previously created MapView instance
+	 *			method "get", no params: returns the MapView instance
+	 *							for this div
+	 *			method "remove", no params: removes the google map 
+	 *							from this div and shows the original contents
+	 *			method "resize", no params: adjusts the size of the google map
+	 *							to match its parent (the selector). useful
+	 *							if you cause the parent's size to change
+	 *			method "showMarker", "markerTitle": pass the @title attribute
+	 *							of the marker for which you want to show
+	 *							the info window.
+	 *			method "closeWindow", no params: close the info window if open
+	 *
+	 *	note: see comment for GoogleMap.MapView class for HTML structure that
+	 *		the selected div(s) should follow.
+	 */
 	$.fn[PLUGIN_NAME] = function() {
 		var $wrapper,
 			mapView,
@@ -380,13 +430,15 @@
 				if (API_LOAD_STATUS === STATUSES.LOADING || API_LOAD_STATUS === STATUSES.LOADED) {
 					$wrapper = $(this);
 					//prevent double-init for given dom node
-					mapView = $wrapper.data(PLUGIN_NAME) || new GoogleMap.MapView($wrapper);
+					if ($wrapper.data(PLUGIN_NAME) != null) {
+						$wrapper.data(PLUGIN_NAME).init();
+						return;
+					}
+					mapView = new GoogleMap.MapView($wrapper);
 					//save the mapview for later access
 					$wrapper.data(PLUGIN_NAME, mapView);
 					//add it to list of managed mapviews so we can retrieve it later
-					if (ALL_MAPS.indexOf(mapView) < 0) {
-						ALL_MAPS.push(mapView);
-					}
+					ALL_MAPS.push(mapView);
 					//if the api has already been loaded, init the map straight away
 					if (API_LOAD_STATUS === STATUSES.LOADED) {
 						mapView.init();
@@ -406,12 +458,22 @@
 				mapView.resize();
 			} else if (args[0] === "showMarker" && args.length === 2) {
 				mapView.showInfoWindow(args[1]);
+			} else if (args[0] === "closeWindow") {
+				mapView.closeInfoWindow();
 			}
 		}
 	}
 
 	$(document).ready(function() {
-		$('.google_map').googlemap();
+		var $script,
+			autoload = true;
+		$('script').each(function() {
+			if ($(this).data(PLUGIN_NAME + '_autoload') === "off") {
+				autoload = false;
+			}
+		});
+		if (autoload) {
+			$('.googlemap').googlemap();
+		}
 	});
-
 }).call(this, jQuery);

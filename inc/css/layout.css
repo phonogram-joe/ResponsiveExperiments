@@ -7,3 +7,6 @@
 	float: right;
 	width: 180px;
 }*/
+.map_loading {
+	opacity: 0;
+}
