@@ -114,4 +114,4 @@
         };
     }
     
-})(jQuery);
+}).call(this, jQuery);

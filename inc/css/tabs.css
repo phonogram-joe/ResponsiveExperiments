@@ -1,4 +1,10 @@
-/* tabs */
+/* 
+	tabs
+
+	TODO: no need for the outer .tab_group wrapper element in the core code
+		can set the tab list as ul.tabs and the wrapper for the tabs
+		as div.tabs_content
+*/
 .tab_group {
 	margin-bottom: 1em;
 	padding-bottom: 1em;
