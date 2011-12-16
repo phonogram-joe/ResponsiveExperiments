@@ -1,8 +1,7 @@
 (function($) {
 	var context = this,
-		NAMESPACE = 'GoogleMap',
-		NO_CONFLICT_ORIGINAL = context[NAMESPACE],
-		PLUGIN_CALLBACK_NAME = NAMESPACE + '.utils.onApiLoad',
+		PLUGIN_NAME = 'googlemap',
+		PLUGIN_CALLBACK_NAME = '$.' + PLUGIN_NAME + '.utils.onApiLoad',
 		API_URL = 'http://maps.googleapis.com/maps/api/js?sensor=false&callback=' + PLUGIN_CALLBACK_NAME,
 		STATUSES = {
 			UNLOADED: 0,
@@ -58,7 +57,9 @@
 	}
 	GoogleMap.MapView.prototype = {
 		init: function() {
+			if (this.map != null) return;
 			this.$wrapper.removeClass('map_loading');
+			this.$wrapper.addClass('map_active');
 			this.$wrapper.children().hide();
 			this.$wrapper.append(this.$mapDiv);
 			
@@ -66,18 +67,6 @@
 			this.initMap();
 			this.initInfoView();
 			this.initMarkerViews();
-		},
-
-		remove: function() {
-			this.$wrapper.removeClass('map_loading');
-			this.$wrapper.data(NAMESPACE, null);
-			if (this.map != null) {
-				$.each(this.markers, function(title, markerView) {
-					markerView.remove();
-				});
-				this.$mapDiv.remove();
-				this.map = null;
-			}
 		},
 
 		initMap: function() {
@@ -113,8 +102,7 @@
 
 		updateLayout: function() {
 			this.$mapDiv.css({
-				width: this.$wrapper.width() + 'px',
-				height: this.$wrapper.height() + 'px'
+				width: this.$wrapper.width() + 'px'
 			});
 		},
 
@@ -154,10 +142,29 @@
 		 *		element and call <code>$(wrapper).googlemap('resize');</code>
 		 */
 		resize: function() {
-			console.log("resizng map", this);
+			console.log("resizing map", this);
 			this.updateLayout();
 			google.maps.event.trigger(this.map, 'resize');
-		}
+		},
+
+		/*
+		 *	remove()
+		 *		remove the google map functionality from the wrapper
+		 *		and re-show its normal contents.
+		 */
+		remove: function() {
+			if (this.map != null) {
+				$.each(this.markers, function(title, markerView) {
+					markerView.remove();
+				});
+				this.$mapDiv.remove();
+				this.map = null;
+			}
+			this.$wrapper
+				.removeClass('map_loading map_active')
+				.data(PLUGIN_NAME, null)
+				.children().show();
+		}	
 	}
 
 
@@ -174,7 +181,7 @@
 	 */
 	GoogleMap.MarkerView = function(mapView, markerData) {
 		_.bindAll(this, 'onClick');
-		this._id = _.uniqueId(NAMESPACE);
+		this._id = _.uniqueId(PLUGIN_NAME);
 		this.mapView = mapView;
 		this.data = markerData;
 		this.marker = new google.maps.Marker(markerData);
@@ -343,6 +350,7 @@
 		 *		and let them update their size as necessary.
 		 */
 		onWindowResize: function() {
+			console.log("utils.onWindowResize");
 			for (var mapIndex = 0; mapIndex < ALL_MAPS.length; mapIndex++) {
 				ALL_MAPS[mapIndex].resize();
 			}
@@ -358,32 +366,11 @@
 				ALL_MAPS[mapIndex].remove();
 			}
 			ALL_MAPS = [];
-		},
-
-		/*
-		 *	noConflict(callbackName)
-		 *		removes the plugins global name to its original value, and
-		 *		returns a reference to the plugin root object so that it
-		 *		can still be referenced. if called after one or more maps have
-		 *		been initialized, resetting would break the google map loading
-		 *		callback. as such, pass in a new name that can be set globally
-		 *		to reference the api callback method.
-		 *
-		 *	note: must be called before any maps are initialized. if called after,
-		 *		returns null and has no effect.
-		 *
-		 *	params:
-		 *		callbackName: a name to use on the global
-		 */
-		noConflict: function(callbackName) {
-			if (API_LOAD_STATUS !== STATUSES.UNLOADED) return null;
-			context[NAMESPACE] = NO_CONFLICT_ORIGINAL;
-			context[callbackName] = GoogleMap.utils.onApiLoad;
-			return GoogleMap;
 		}
 	}
 
-	$.fn.googlemap = function() {
+	$[PLUGIN_NAME] = GoogleMap;
+	$.fn[PLUGIN_NAME] = function() {
 		var $wrapper,
 			mapView,
 			args = Array.prototype.slice.call(arguments);
@@ -392,9 +379,15 @@
 			return this.each(function() {
 				if (API_LOAD_STATUS === STATUSES.LOADING || API_LOAD_STATUS === STATUSES.LOADED) {
 					$wrapper = $(this);
-					mapView = new GoogleMap.MapView($wrapper);
-					$wrapper.data(NAMESPACE, mapView);
-					ALL_MAPS.push(mapView);
+					//prevent double-init for given dom node
+					mapView = $wrapper.data(PLUGIN_NAME) || new GoogleMap.MapView($wrapper);
+					//save the mapview for later access
+					$wrapper.data(PLUGIN_NAME, mapView);
+					//add it to list of managed mapviews so we can retrieve it later
+					if (ALL_MAPS.indexOf(mapView) < 0) {
+						ALL_MAPS.push(mapView);
+					}
+					//if the api has already been loaded, init the map straight away
 					if (API_LOAD_STATUS === STATUSES.LOADED) {
 						mapView.init();
 					}
@@ -403,21 +396,22 @@
 				} //we already called loadApi(), so status cannot be UNLOADED
 			});
 		} else {
-			mapView = $(this).data(NAMESPACE);
+			mapView = $(this).data(PLUGIN_NAME);
 			if (args[0] === "get") {
 				return mapView;
 			} else if (args[0] === "remove") {
 				mapView.remove();
 				return null;
-			} else if (args[0] == "resize") {
+			} else if (args[0] === "resize") {
 				mapView.resize();
+			} else if (args[0] === "showMarker" && args.length === 2) {
+				mapView.showInfoWindow(args[1]);
 			}
 		}
 	}
 
-	/*	
-	 *	export the plugin globally under a single namespace.
-	 */
-	context[NAMESPACE] = GoogleMap;
+	$(document).ready(function() {
+		$('.google_map').googlemap();
+	});
 
 }).call(this, jQuery);
