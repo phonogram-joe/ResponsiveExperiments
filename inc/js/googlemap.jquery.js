@@ -241,6 +241,11 @@
 			this.isInitialized = false;
 		},
 
+		/*
+		 * 	remove()
+		 *		public function for deactivating this map and putting it back to its pre-map
+		 *		html state.
+		 */
 		remove: function() {
 			GoogleMap.utils.removeMap(this);
 		}
@@ -266,7 +271,6 @@
 		this.marker = new google.maps.Marker(markerData);
 		this.markerClickListener = google.maps.event.addListener(this.marker, 'click', this.onClick);
 	}
-
 	GoogleMap.MarkerView.prototype = {
 		/*
 		 *	onClick(event)
@@ -552,9 +556,14 @@
 			}
 		},
 
+		/*
+		 *	addMap($wrapper)
+		 *		if the given $wrapper is not already converted into a map, 
+		 *		convert it into one (otherwise re-initialize it)
+		 */
 		addMap: function($wrapper) {
 			//prevent double-init for given dom node
-			if ($wrapper.data(PLUGIN_NAME) != null) {
+			if (typeof $wrapper.data(PLUGIN_NAME) && $wrapper.data(PLUGIN_NAME) != null) {
 				$wrapper.data(PLUGIN_NAME).init();
 				return;
 			}
@@ -569,6 +578,11 @@
 			}
 		},
 
+		/*
+		 *	removeMap(mapView)
+		 *		convert the given mapView back into its pre-map HTML state
+		 *		and remove it from the list of managed maps.
+		 */
 		removeMap: function(mapView) {
 			var allMapsIndex = _.indexOf(ALL_MAPS, mapView);
 			mapView.deactive();
@@ -664,7 +678,7 @@
 		}
 	}
 
-	//(function() {
+	function initPlugin() {
 		var $scriptTag = $('script').filter(':last'),
 			scriptContent = $scriptTag.get(0).innerHTML;
 		if ($scriptTag.data('autoload')) {
@@ -691,6 +705,7 @@
 				$.globalEval(scriptContent);
 			}
 		});
-	//})();
+	};
+	initPlugin();
 
 }).call(this, jQuery);
