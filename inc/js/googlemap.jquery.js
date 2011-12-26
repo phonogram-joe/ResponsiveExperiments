@@ -77,6 +77,18 @@
 	}
 	GoogleMap.MapView.prototype = {
 		init: function() {
+			var $parentTab,
+				isDynamic = GoogleMap.utils.useDynamicMaps();
+			this.updateLayout();
+			
+			if (this.$wrapper.is(':hidden') && isDynamic) {
+				$parentTab = this.$wrapper.parents('.tab_group .tabs > div');
+				if ($parentTab.size()) {
+					//$parentTab.height(this.$mapDiv.height());
+					$parentTab.on('tabshown:tab_group', _.bind(this.init, this));
+					return;
+				}
+			}
 			if (this.isInitialized) return;
 			this.isInitialized = true;
 			this.$wrapper.removeClass(CLASSES.mapLoading);
@@ -84,8 +96,7 @@
 			this.$wrapper.children().hide();
 			this.$wrapper.append(this.$mapDiv);
 			
-			this.updateLayout();
-			if (GoogleMap.utils.useDynamicMaps()) {
+			if (isDynamic) {
 				this.initMap();
 			} else {
 				this.initStaticMap();
@@ -266,6 +277,14 @@
 		 */
 		remove: function() {
 			GoogleMap.utils.removeMap(this);
+		},
+
+		/*
+		 *	height()
+		 *		returns the height of the map (as number of px)
+		 */
+		height: function() {
+			return this.$mapDiv.height();
 		}
 	}
 

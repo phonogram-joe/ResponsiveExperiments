@@ -27,29 +27,31 @@
                 //TODO: should be able to click a different tab
                 //      and go to it without waiting for
                 //      transition animation to finish
-                //      should work properly with window resize as well
             
                 // Figure out current list via CSS class
                 var curList = base.$el.find("a.active").attr("href").substring(1),
                 
                 // List moving to
-                    $newList = $(this),
+                $newList = $(this),
                     
                 // Figure out ID of new list
-                    listID = $newList.attr("href").substring(1),
+                listID = $newList.attr("href").substring(1),
                 
                 // Set outer wrapper height to (static) height of current inner list
-                    $allListWrap = base.$el.find(".tabs"),
-                    curListHeight = $allListWrap.height();
+                $allListWrap = base.$el.find(".tabs"),
+                curListHeight = $allListWrap.height();
                 $allListWrap.height(curListHeight);
                                         
                 if ((listID != curList) && ( base.$el.find(":animated").length == 0)) {
-                                            
+                                        
                     // Fade out current list
                     base.$el.find("#"+curList).fadeOut(Modernizr.opacity ? base.options.speed : 0, function() {
-                        
+                        $(this).trigger('tabhidden:tab_group');
+
                         // Fade in new list on callback
-                        base.$el.find("#"+listID).fadeIn(base.options.speed);
+                        base.$el.find("#"+listID).fadeIn(base.options.speed, function() {
+                            $(this).trigger('tabshown:tab_group');
+                        });
                         
                         // Adjust outer wrapper to fit new list snuggly
                         var newHeight = base.$el.find("#"+listID).height();
@@ -62,10 +64,8 @@
                         // Remove highlighting - Add to just-clicked tab
                         base.$el.find(".tab_nav li a").removeClass("active");
                         $newList.addClass("active");
-                            
-                    });
-                    
-                }   
+                    });   
+                }
                 
                 // Don't behave like a regular link
                 // Stop propagation and bubbling
