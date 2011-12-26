@@ -7,12 +7,20 @@
 		PLUGIN_NAME = 'googlemap',
 		PLUGIN_CALLBACK_NAME = '$.' + PLUGIN_NAME + '.utils.onApiLoad',
 		API_URL = 'http://maps.googleapis.com/maps/api/js?sensor=false&callback=' + PLUGIN_CALLBACK_NAME,
+		STATIC_MAP_URL = 'http://maps.googleapis.com/maps/api/staticmap?',
+		STATIC_MAP_URL_MAX_LENGTH = 2048,
 		STATUSES = {
 			UNLOADED: 0,
 			LOADING: 1,
 			LOADED: 2,
 			ERROR: 3
 		},
+		CLASSES = {
+			mapLoading: 'map_loading',
+			mapActive: 'map_active',
+			mapStatic: 'map_static',
+			autoOpen: 'map_autoopen'
+		}
 		API_LOAD_STATUS = STATUSES.UNLOADED,
 		GoogleMap = {},
 		ALL_MAPS = [];
@@ -58,33 +66,67 @@
 		this.$mapDiv = $('<div></div>');
 		this.$mapDiv.height(this.$wrapper.data('mapheight'));
 		this.map = null;
+		this.infoView = null;
+		this.markers = null;
 		this.center = null;
+		this.isInitialized = false;
 		
-		this.$wrapper.addClass('map_loading');
+		this.$wrapper.addClass(CLASSES.mapLoading);
 	}
 	GoogleMap.MapView.prototype = {
 		init: function() {
-			if (this.map != null || API_LOAD_STATUS !== STATUSES.LOADED) return;
-			this.$wrapper.removeClass('map_loading');
-			this.$wrapper.addClass('map_active');
+			if (this.isInitialized) return;
+			this.isInitialized = true;
+			this.$wrapper.removeClass(CLASSES.mapLoading);
+			this.$wrapper.addClass(CLASSES.mapActive);
 			this.$wrapper.children().hide();
 			this.$wrapper.append(this.$mapDiv);
 			
 			this.updateLayout();
-			this.initMap();
-			this.initInfoView();
-			this.initMarkerViews();
-			this.openDefaultMarker();
+			if (GoogleMap.utils.useDynamicMaps()) {
+				this.initMap();
+			} else {
+				this.initStaticMap();
+			}
 		},
 
-		initMap: function() {
+		getMapOptions: function() {
 			var mapOptions = {
 				center: GoogleMap.utils.geoToLatLng(this.$wrapper.data('center')),
 				zoom: this.$wrapper.data('zoom') || 14,
-				mapTypeId: google.maps.MapTypeId.ROADMAP,
 				scrollwheel: this.$wrapper.data('noscroll') ? false : true
 			};
+			return mapOptions;
+		},
+
+		initStaticMap: function() {
+			var mapOptions = this.getMapOptions(),
+				markers = [],
+				marker,
+				mapImg;
+			this.$wrapper.find('li').each(function() {
+				marker = $(this).data('geo').split(',');
+				marker = {latitude: marker[0], longitude: marker[1]};
+				markers.push(marker);
+			});
+			mapOptions.markers = markers;
+			mapOptions.width = this.$mapDiv.width();
+			mapOptions.height = this.$mapDiv.height();
+
+			this.$wrapper.removeClass(CLASSES.mapActive);
+			this.$wrapper.addClass(CLASSES.mapStatic);
+			mapImg = new Image();
+			mapImg.src = GoogleMap.utils.staticMapUrl(mapOptions);
+			this.$mapDiv.append(mapImg);
+		},
+
+		initMap: function() {
+			var mapOptions = this.getMapOptions();
+			mapOptions.mapTypeId = google.maps.MapTypeId.ROADMAP;
 			this.map = new google.maps.Map(this.$mapDiv.get(0), mapOptions);
+			this.initInfoView();
+			this.initMarkerViews();
+			this.openDefaultMarker();
 		},
 
 		initInfoView: function() {
@@ -111,9 +153,11 @@
 		},
 
 		openDefaultMarker: function() {
-			var defaultMarkerTitle = this.$wrapper.find('.map_autoopen').attr('title'),
+			var defaultMarkerTitle = this.$wrapper.find('.' + CLASSES.autoOpen).attr('title'),
 				markerView;
-			if (defaultMarkerTitle != null && defaultMarkerTitle.length > 0 && this.markers.hasOwnProperty(defaultMarkerTitle)) {
+			if (this.map != null && defaultMarkerTitle != null 
+				&& defaultMarkerTitle.length > 0 && this.markers.hasOwnProperty(defaultMarkerTitle)) 
+			{
 				markerView = this.markers[defaultMarkerTitle];
 				this.map.setCenter(markerView.marker.getPosition());
 				this.showInfoWindow(defaultMarkerTitle);
@@ -135,10 +179,12 @@
 		 *					itself for which the info window should open
 		 */
 		showInfoWindow: function(markerView) {
-			if (_.isString(markerView)) {
-				markerView = this.markers[markerView];
+			if (this.infoView != null && this.markers != null) {
+				if (_.isString(markerView)) {
+					markerView = this.markers[markerView];
+				}
+				this.infoView.showForMarker(markerView);
 			}
-			this.infoView.showForMarker(markerView);
 		},
 		
 		/*
@@ -146,7 +192,9 @@
 		 *		close the info window if open.
 		 */
 		closeInfoWindow: function() {
-			this.infoView.close();
+			if (this.infoView != null) {
+				this.infoView.close();
+			}
 		},
 
 		/*
@@ -162,30 +210,40 @@
 		 *		element and call <code>$(wrapper).googlemap('resize');</code>
 		 */
 		resize: function() {
-			console.log("resizing map", this);
-			this.updateLayout();
-			google.maps.event.trigger(this.map, 'resize');
+			if (this.map != null) {
+				this.updateLayout();
+				google.maps.event.trigger(this.map, 'resize');
+			}
 		},
 
 		/*
-		 *	remove()
+		 *	deactive()
 		 *		remove the google map functionality from the wrapper
-		 *		and re-show its normal contents.
+		 *		and re-show its normal contents. map will have to be
+		 *		re-initialized with 'init()' to turn it into a map again.
 		 */
-		remove: function() {
-			if (this.map != null) {
+		deactive: function() {
+			if (this.markers != null) {
 				$.each(this.markers, function(title, markerView) {
 					markerView.remove();
 				});
-				this.$mapDiv.remove();
+			}
+			if (this.infoView != null) {
+				this.infoView.remove();
+			}
+			if (this.map != null) {
 				this.map = null;
 			}
+			this.$mapDiv.empty().remove(); //remove any static images and then hide
 			this.$wrapper
-				.removeClass('map_loading map_active')
+				.removeClass(CLASSES.mapLoading + ' ' + CLASSES.mapActive + ' ' + CLASSES.mapStatic)
 				.children().show();
-			//TODO: may potentially want to also remove the data value saved,
-			//as well as removing the map from the ALL_MAPS array
-		}	
+			this.isInitialized = false;
+		},
+
+		remove: function() {
+			GoogleMap.utils.removeMap(this);
+		}
 	}
 
 
@@ -299,11 +357,40 @@
 		},
 
 		remove: function() {
-			this.hide();
-			google.maps.events.removeListener(this.infoWindowClickListener);
+			this.close();
+			google.maps.event.removeListener(this.infoWindowClickListener);
 			this.infoWindow = null;
 			this.infoWindowClickListener = null;
 		}
+	}
+
+	/*
+	 *	GoogleMap.LatLng
+	 *		compatibility class for Google's LatLng class. in cases where static
+	 *		maps are used and the google library is not loaded, we fall back to
+	 *		this class for representing center & marker locations.
+	 */
+	GoogleMap.LatLng = function(latitude, longitude) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+	GoogleMap.LatLng.prototype = {
+		lat: function() {
+			return this.latitude;
+		},
+
+		lng: function() {
+			return this.longitude;
+		}
+	}
+
+	/*
+	 * options for the plugin. these are set using data- attributes on the script tag itself.
+	 */
+	GoogleMap.options = {
+		forceDynamic: false, //data-forcedynamic="true" to force dynamic maps even in unsupported browsers
+		forceStatic: false, //data-forcestatic="true" to force static maps even in supported browsers
+		autoload: false //data-autoload="true" to automatically turn any divs with the googlemap class into maps
 	}
 	
 
@@ -322,7 +409,79 @@
 		 */
 		geoToLatLng: function(geostr) {
 			var latLong = geostr.split(',');
-			return new google.maps.LatLng(latLong[0], latLong[1]);
+			if (typeof google !== 'undefined') {
+				return new google.maps.LatLng(latLong[0], latLong[1]);
+			} else {
+				return new GoogleMap.LatLng(latLong[0], latLong[1]);
+			}
+		},
+
+		/*
+		 *	useDynamicMaps()
+		 *		returns true if the browser is supported by Google Maps API 3, or
+		 *		if a flag is set on the plugin's script tag to 'force' support.
+		 *		otherwise, returns false. at present, only IE 6 is set to unsupported
+		 *		by default due to reports of odd display/layout issues.
+		 */
+		useDynamicMaps: function() {
+			var isSupportedBrowser = !($.browser.msie && $.browser.version <= 6);
+			if (GoogleMap.options.forceStatic) return false;
+			return isSupportedBrowser || GoogleMap.options.forceDynamic;
+		},
+
+		/*
+		 *	staticMapUrl(options)
+		 *		returns a string URL for a static Google Map with the given options & markers.
+		 */
+		staticMapUrl: function(mapOptions) {
+			var url,
+				queryParams = {},
+				markerStyle = '',
+				markerData = [],
+				centerLatitude = mapOptions.center.lat(),
+				centerLongitude = mapOptions.center.lng(),
+				markerLocationStr;
+			queryParams.sensor = 'false'; //google returns a 403 error if sensor not specified
+			queryParams.size = (mapOptions.width || 400) + 'x' + (mapOptions.height || 400); //result image size
+			queryParams.maptype = 'roadmap';
+			
+			//can optionally provide an icon to use for map locations
+			if (mapOptions.icon) {
+				markerStyle = 'icon:' + mapOptions.icon;
+			}
+			markerStyle += '|';
+			
+			//if marker data is supplied, sort the data in closest-to-center -> farthest-from-center order.
+			if (mapOptions.markers != null) {
+				markerData = mapOptions.markers.sort(function(a,b) {
+					var a_dist = Math.sqrt(Math.pow(a.latitude - centerLatitude,2) * Math.pow(a.longitude - centerLongitude,2)),
+						b_dist = Math.sqrt(Math.pow(b.latitude - centerLatitude,2) * Math.pow(b.longitude - centerLongitude,2));
+					return a_dist - b_dist;
+				});
+			}
+			if (markerData.length == 0) {
+				//if no marker data, then we have to set a center & zoom.
+				queryParams.center = centerLatitude + ',' + centerLongitude;
+				queryParams.zoom = mapOptions.zoom || 14;
+			}
+
+			//first get the base URL without any marker data, appending all non-marker related query params
+			url = STATIC_MAP_URL + _(queryParams).chain().keys().map(function(value) {
+				return value + '=' + encodeURIComponent(queryParams[value]);
+			}).value().join('&') + '&markers=' + encodeURIComponent(markerStyle);
+			
+			//one at a time append marker data to URL, stopping when google's max URL length is reached
+			//in the case that not all marker data can fit, we will show the closest-to-center markers
+			//because of the sort previously applied to the array
+			for (var i = 0; i < markerData.length; i++) {
+				markerLocationStr = encodeURIComponent(markerData[i].latitude + ',' + markerData[i].longitude + '|');
+				if (url.length + markerLocationStr.length < STATIC_MAP_URL_MAX_LENGTH) {
+					url += markerLocationStr;
+				} else {
+					break;
+				}
+			}
+			return url;
 		},
 
 		/*
@@ -372,8 +531,10 @@
 		 *		and let them update their size as necessary.
 		 */
 		onWindowResize: function() {
-			console.log("utils.onWindowResize");
-			for (var mapIndex = 0; mapIndex < ALL_MAPS.length; mapIndex++) {
+			var mapIndex,
+				mapsCount =ALL_MAPS.length;
+			console.log("utils.onWindowResize: updating " + mapsCount + " maps");
+			for (mapIndex = 0; mapIndex < mapsCount; mapIndex++) {
 				ALL_MAPS[mapIndex].resize();
 			}
 		},
@@ -381,19 +542,66 @@
 		/*
 		　*	onApiError()
 		 *		callback for cases when google map api times out.
+		 *		removes all maps that have been created and reverts
+		 *		them to their original state.
 		 */
 		onApiError: function() {
 			API_LOAD_STATUS = STATUSES.ERROR;
-			for (var mapIndex = 0; mapIndex < ALL_MAPS.length; mapIndex++) {
-				ALL_MAPS[mapIndex].remove();
+			while (ALL_MAPS.length > 0) {
+				GoogleMap.utils.removeMap(ALL_MAPS.pop());
 			}
-			ALL_MAPS = [];
+		},
+
+		addMap: function($wrapper) {
+			//prevent double-init for given dom node
+			if ($wrapper.data(PLUGIN_NAME) != null) {
+				$wrapper.data(PLUGIN_NAME).init();
+				return;
+			}
+			mapView = new GoogleMap.MapView($wrapper);
+			//save the mapview for later access
+			$wrapper.data(PLUGIN_NAME, mapView);
+			//add it to list of managed mapviews so we can retrieve it later
+			ALL_MAPS.push(mapView);
+			//if the api has already been loaded, init the map straight away
+			if (API_LOAD_STATUS === STATUSES.LOADED) {
+				mapView.init();
+			}
+		},
+
+		removeMap: function(mapView) {
+			var allMapsIndex = _.indexOf(ALL_MAPS, mapView);
+			mapView.deactive();
+			mapView.$wrapper.removeData(PLUGIN_NAME);
+			if (allMapsIndex >= 0) {
+				GoogleMap.utils.arrayRemove(ALL_MAPS, allMapsIndex);
+			}
+		},
+
+		/* 
+		 *	arrayRemove(array, from, to)
+		 *		Array Remove - By John Resig (MIT Licensed)
+		 *		http://ejohn.org/blog/javascript-array-remove/
+		 *		removes the items with index in the range from-to from
+		 *		the passed array. modifies the array in place.
+		 *
+		 *	params:
+		 *		array: the array from which to remove one/more items
+		 *		from: the start index of the items to remove
+		 *		to: the end index of the items to remove
+		 *	returns: the new length of the array
+		 */
+		arrayRemove: function(array, from, to) {
+			var rest = array.slice((to || from) + 1 || array.length);
+			array.length = from < 0 ? array.length + from : from;
+			return array.push.apply(array, rest);
 		}
 	}
 
 	/*
 	 *	$.googlemap
-	 *		provides direct access to all of the plugin classes and functions
+	 *		root object (GoogleMap) that provides direct access to all plugin classes
+	 *		and functions
 	 */
 	$[PLUGIN_NAME] = GoogleMap;
 
@@ -433,26 +641,14 @@
 			return this.each(function() {
 				if (API_LOAD_STATUS === STATUSES.LOADING || API_LOAD_STATUS === STATUSES.LOADED) {
 					$wrapper = $(this);
-					//prevent double-init for given dom node
-					if ($wrapper.data(PLUGIN_NAME) != null) {
-						$wrapper.data(PLUGIN_NAME).init();
-						return;
-					}
-					mapView = new GoogleMap.MapView($wrapper);
-					//save the mapview for later access
-					$wrapper.data(PLUGIN_NAME, mapView);
-					//add it to list of managed mapviews so we can retrieve it later
-					ALL_MAPS.push(mapView);
-					//if the api has already been loaded, init the map straight away
-					if (API_LOAD_STATUS === STATUSES.LOADED) {
-						mapView.init();
-					}
+					GoogleMap.utils.addMap($wrapper);
 				} else if (API_LOAD_STATUS === STATUSES.ERROR) {
 					
-				} //we already called loadApi(), so status cannot be UNLOADED
+				} //we already called loadApi(), so status will not be UNLOADED
 			});
 		} else {
 			mapView = $(this).data(PLUGIN_NAME);
+			if (typeof mapView === 'undefined' || mapView == null) return;
 			if (args[0] === "get") {
 				return mapView;
 			} else if (args[0] === "remove") {
@@ -468,16 +664,33 @@
 		}
 	}
 
-	$(document).ready(function() {
-		var $script,
-			autoload = true;
-		$('script').each(function() {
-			if ($(this).data(PLUGIN_NAME + '_autoload') === "off") {
-				autoload = false;
+	//(function() {
+		var $scriptTag = $('script').filter(':last'),
+			scriptContent = $scriptTag.get(0).innerHTML;
+		if ($scriptTag.data('autoload')) {
+			GoogleMap.options.autoload = true;
+		}
+		if ($scriptTag.data('forcedynamic')) {
+			GoogleMap.options.forceDynamic = true;
+		}
+		if ($scriptTag.data('forcestatic')) {
+			GoogleMap.options.forceStatic = true;
+		}
+
+		if (!GoogleMap.utils.useDynamicMaps()) {
+			//if settings/browser are such that dynamic maps will not be used,
+			//act as if google maps library was already loaded (w/o bothering to load it)
+			API_LOAD_STATUS = STATUSES.LOADED;
+		}
+		$(document).ready(function() {
+			if (GoogleMap.options.autoload) {
+				//active the googlemap() plugin for anything with a classname of 'googlemap'
+				$('.' + PLUGIN_NAME)[PLUGIN_NAME]();
+			}
+			if (scriptContent) {
+				$.globalEval(scriptContent);
 			}
 		});
-		if (autoload) {
-			$('.googlemap').googlemap();
-		}
-	});
+	//})();
+
 }).call(this, jQuery);
