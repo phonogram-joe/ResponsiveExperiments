@@ -1,6 +1,11 @@
+/*
+    derived from Cris Coyier's 'Organic Tabs' at http://css-tricks.com/organic-tabs/
+*/
 (function($) {
+    var context = this,
+        PLUGIN_NAME = 'tab_group';
 
-    $.organicTabs = function(el, options) {
+    $[PLUGIN_NAME] = function(el, options) {
     
         var base = this;
         base.$el = $(el);
@@ -8,7 +13,7 @@
                 
         base.init = function() {
         
-            base.options = $.extend({},$.organicTabs.defaultOptions, options);
+            base.options = $.extend({},$[PLUGIN_NAME].defaultOptions, options);
             
             // Accessible hiding fix
             $(".inactive").css({
@@ -18,10 +23,6 @@
                 "display": "none"
             });
 
-            $(window).bind('resize', debounce(function() {
-                //TODO: stop the current animation and reset
-            }, 50));
-            
             base.$nav.delegate("li > a", "click", function() {
                 //TODO: should be able to click a different tab
                 //      and go to it without waiting for
@@ -45,7 +46,7 @@
                 if ((listID != curList) && ( base.$el.find(":animated").length == 0)) {
                                             
                     // Fade out current list
-                    base.$el.find("#"+curList).fadeOut(base.options.speed, function() {
+                    base.$el.find("#"+curList).fadeOut(Modernizr.opacity ? base.options.speed : 0, function() {
                         
                         // Fade in new list on callback
                         base.$el.find("#"+listID).fadeIn(base.options.speed);
@@ -54,6 +55,8 @@
                         var newHeight = base.$el.find("#"+listID).height();
                         $allListWrap.animate({
                             height: newHeight
+                        }, base.options.speed, function() {
+                            $allListWrap.css('height', '');
                         });
                         
                         // Remove highlighting - Add to just-clicked tab
@@ -65,7 +68,7 @@
                 }   
                 
                 // Don't behave like a regular link
-                // Stop propegation and bubbling
+                // Stop propagation and bubbling
                 return false;
             });
             
@@ -73,45 +76,36 @@
         base.init();
     };
     
-    $.organicTabs.defaultOptions = {
-        "speed": 300
+    $[PLUGIN_NAME].defaultOptions = {
+        speed: 300,
+        autoload: false
     };
     
-    $.fn.organicTabs = function(options) {
+    $.fn[PLUGIN_NAME] = function(options) {
         return this.each(function() {
-            (new $.organicTabs(this, options));
+            (new $[PLUGIN_NAME](this, options));
         });
     };
 
-    /*
-     *  debounce(func,wait)
-     *      @func: function to call
-     *      @wait: the amount to wait before executing
-     * 
-     *  per underscore documentation:
-     *      Returns a function, that, as long as it continues to be invoked, 
-     *      will not be triggered. The function will be called after it stops
-     *      being called for N milliseconds.
-     *
-     *  Underscore.js 1.2.3
-     *  (c) 2009-2011 Jeremy Ashkenas, DocumentCloud Inc.
-     *  Underscore is freely distributable under the MIT license.
-     *  Portions of Underscore are inspired or borrowed from Prototype,
-     *  Oliver Steele's Functional, and John Resig's Micro-Templating.
-     *  For all details and documentation:
-     *      http://documentcloud.github.com/underscore
-     */
-    function debounce(func,wait) {
-        var timeout;
-        return function() {
-            var context = this, args = arguments;
-            var later = function() {
-                timeout = null;
-                func.apply(context, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+    function initPlugin() {
+        var $scriptTag = $('script').filter(':last'),
+            scriptContent = $scriptTag.get(0).innerHTML;
+        if ($scriptTag.data('autoload')) {
+            $[PLUGIN_NAME].defaultOptions.autoload = true;
+        }
+        if ($scriptTag.data('speed')) {
+            $[PLUGIN_NAME].defaultOptions.speed = $scriptTag.data('speed');
+        }
+        $(document).ready(function() {
+            if ($[PLUGIN_NAME].defaultOptions.autoload) {
+                //active the tab_group() plugin for anything with a class of 'tab_group'
+                $('.' + PLUGIN_NAME)[PLUGIN_NAME]();
+            }
+            if (scriptContent) {
+                $.globalEval(scriptContent);
+            }
+        });
     }
+    initPlugin();
     
 }).call(this, jQuery);
