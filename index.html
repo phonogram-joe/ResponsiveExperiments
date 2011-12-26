@@ -16,6 +16,7 @@
 	<link rel="stylesheet" href="inc/css/base.css">
 	<link rel="stylesheet" href="inc/css/tabs.css">
 	<link rel="stylesheet" href="inc/css/layout.css">
+	<link rel="stylesheet" href="inc/css/maps.css">
 
 	<script src="inc/js/libs/modernizr-2.0.6.min.js"></script>
 	
@@ -29,21 +30,21 @@
 		</nav>
 	</header>
 
-	<article id="content">
+	<article class="content">
 		<header>
 			<h1>Tab Share</h1>
 		</header>
 		
 		<p>A tab plugin that can be used across all our sites with ease</p>
 
-		<section class="tab_group">
-			<ul class="tab_nav">
+		<div id="tabOne" class="tab_group">
+			<ul class="tab_nav group">
 				<li><a href="#html" class="active">HTML</a></li>
 				<li><a href="#css">Styles</a></li>
-				<li><a href="#script">Scripting Options</a></li>
+				<li class="last"><a href="#script">Scripting Options</a></li>
 			</ul>
 
-			<section class="tabs">
+			<div class="tabs">
 				<div id="html">
 					This is the HTML structure for tabs:
 					...
@@ -63,8 +64,8 @@
 					...
 					<p>Nunc pharetra felis nec sem vulputate at semper nisl sagittis. Ut pellentesque ultrices lacinia. Etiam volutpat dapibus venenatis. Morbi adipiscing dolor eget orci egestas fermentum. Morbi condimentum felis eu nulla condimentum tincidunt. Cras eu odio eu orci facilisis rutrum. Ut tempus turpis vel nisi pharetra ac commodo dui ullamcorper. Vestibulum ornare porttitor ultrices.</p>
 				</div>
-			</section>
-		</section>
+			</div>
+		</div>
 	</article>
 
 	<article class="content">
@@ -75,20 +76,29 @@
 		<div id="mapOne" class="googlemap" data-noscroll="noscroll" data-center="34.394299,132.457901" data-zoom="14" data-mapheight="400">
 			<ul>
 				<li data-geo="34.409506,132.450528" data-icon="inc/images/maps/train_icon-32.png" title="横川駅">
-					<b>横川駅</b>
+					<div style="width: 250px; max-height: 200px; overflow: auto;">
+					<p><a href="http://ja.wikipedia.org/wiki/%E6%A8%AA%E5%B7%9D%E9%A7%85_(%E5%BA%83%E5%B3%B6%E7%9C%8C)"><b>横川駅</b></a></p>
+					<p>横川駅（よこがわえき）は、広島県広島市西区横川町三丁目にある、西日本旅客鉄道（JR西日本）・広島電鉄の駅・電停。広島電鉄では「駅」も正式電停名に入り、横川駅電停（よこがわえきでんてい）となる。</p>
+					<p>JRの乗車券には信越本線にある横川駅（こちらは「よこかわ」と読む）と区別するため、（陽）横川と表記している。</p>
+					</div>
 				</li>
 				<li class="map_autoopen" data-geo="34.398205,132.475824" data-icon="inc/images/maps/train_icon-32.png" title="広島駅">
-					<b>広島駅</b>
+					<div style="width: 250px; max-height: 200px; overflow: auto;">
+					<p><a href="http://ja.wikipedia.org/wiki/%E5%BA%83%E5%B3%B6%E9%A7%85"><b>広島駅</b></a></p>
+					<p>広島駅（ひろしまえき）は、広島県広島市南区松原町にある、西日本旅客鉄道（JR西日本）の駅。</p>
+					<p>広島電鉄の電停名でもある（こちらは「駅」も正式電停名に入り広島駅電停（ひろしまえきでんてい）となる）。</p>
+					</div>
 				</li>
 			</ul>
 		</div>
 
-		<p>
+		<p class="map_controls">
 			<a href="#" onclick="$('#mapOne').googlemap('showMarker','広島駅');return false;">広島駅</a><br />
 			<a href="#" onclick="$('#mapOne').googlemap('showMarker','横川駅');return false;">横川駅</a><br />
 			<a href="#" onclick="$('#mapOne').googlemap('closeWindow');return false;">情報ウィンドーを閉じる</a><br />
 			<a href="#" onclick="$('#mapOne').googlemap('remove');return false;">マップを閉じる</a><br />
-			<a href="#" onclick="$('#mapOne').googlemap();return false;">マップに変換</a>
+			<a href="#" onclick="$('#mapOne').googlemap();return false;">マップに変換</a><br />
+			<a href="#" onclick="console.log($('#mapOne').googlemap('mapOptions'));return false;">マップのオプションをコンソールで表示する</a><br />
 		</p>
 
 		<p>
@@ -102,10 +112,6 @@
 		<p>Nunc et mattis nibh. Ut vitae interdum lectus. Fusce varius pellentesque facilisis. Curabitur gravida lectus in tellus ullamcorper blandit. Ut felis arcu, scelerisque vulputate tempor ut, rutrum id mi. Duis non fringilla leo. Nunc pellentesque orci quis ipsum facilisis eu rhoncus mauris faucibus. Nunc gravida aliquet lacinia. Donec scelerisque imperdiet lectus, vitae porttitor diam rutrum luctus. In porttitor, elit vitae eleifend malesuada, augue leo malesuada ante, sit amet lacinia risus ligula nec nulla.</p>
 
 		<p>Proin in urna et enim pellentesque scelerisque a quis urna. Ut dapibus sollicitudin mi ac laoreet. Vivamus vestibulum metus a nulla adipiscing gravida vitae quis diam. Aenean a orci sit amet velit euismod interdum nec vitae nulla. Proin malesuada lobortis tincidunt. Mauris enim enim, pulvinar quis pretium id, condimentum sed sem. Nunc vel ante ante. In eu arcu leo, a venenatis nisi. Phasellus porttitor tortor vitae elit semper porta pharetra eu nulla. Quisque facilisis semper dolor quis condimentum. Fusce sed nunc vel nunc tincidunt commodo. Sed sem tellus, dictum quis aliquet a, aliquam non ligula. Vivamus convallis, massa a mollis luctus, tellus nisl aliquam mi, quis hendrerit tortor urna in lacus. Etiam posuere scelerisque vulputate.</p>
-
-		
-
-		
 	</section>
 
 	<footer id="footer">
@@ -114,12 +120,14 @@
 
 	<script src="inc/js/libs/jquery-1.7.1.js"></script>
 	<script src="inc/js/libs/underscore-1.2.3.min.js"></script>
-	<script src="inc/js/libs/backbone-0.5.3.min.js"></script>
-	<script src="inc/js/googlemap.jquery.js" data-autoload="false" data-forcedynamic="false" data-forcestatic="false">
+	<script src="inc/js/googlemap.jquery.js" data-autoload="false" data-forcedynamic="false" data-forcestatic="true">
+		//#mapOne has class 'googlemap' so could eliminate this line with data-autoload="true"
 		$('#mapOne').googlemap();
 	</script>
-	<script src="inc/js/organictab.jquery.js"></script>
-	<script src="inc/js/init.js"></script>
+	<script src="inc/js/tab_group.jquery.js" data-autoload="false" data-speed="300">
+		//#tabOne has class 'tab_group' so could eliminate this line with data-autload="true"
+		$('#tabOne').tab_group();
+	</script>
 <!-- DISABLE GOOGLE ANALYTICS
 <script>
 	var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']]; // Change UA-XXXXX-X to be your site's ID

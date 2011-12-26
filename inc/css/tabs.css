@@ -13,20 +13,30 @@
 .tab_group .tab_nav {
 	overflow: hidden;
 	margin: 0 0 10px 0;
+	padding: 0;
 	list-style: none;
 }
 .tab_group .tab_nav li {
 	float: left;
+	width: 100px;
 	margin: 0 10px 0 0;
 }
 .tab_group .tab_nav li.last {
-	margin:right: 0;
+	margin-right: 0;
 }
 .tab_group .tab_nav a {
 	display: block;
+}
+.tab_group .tabs {
+	overflow: hidden;
 }
 .tab_group .inactive {
 	position: absolute;
 	top: -9999px;
 	left: -9999px;
+}
+.no-js .tab_group .inactive {
+	position: relative;
+	top: 0;
+	left: 0;
 }

@@ -1,12 +1,33 @@
-/*#content {
-	float: left;
-	padding-right: 200px;
+body {
+	width: 800px;
+	margin: 0 auto;
+}
+#header,
+#footer {
+	margin: 0;
+}
+
+.content {
+	float: right;
+	width: 600px;
+	clear: both;
 }
 
 #sidebar {
-	float: right;
 	width: 180px;
-}*/
-.map_loading {
-	opacity: 0;
+	clear: none;
+	float: none;
+}
+
+@media screen and (max-width: 840px) {
+	body {
+		width: auto;
+	}
+	.content {
+		float: none;
+		width: auto;
+	}
+	#sidebar {
+		width: auto;
+	}
 }

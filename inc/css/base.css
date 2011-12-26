@@ -35,6 +35,8 @@ body { margin: 0; font-size: 13px; line-height: 1.231; }
 
 body, button, input, select, textarea { font-family: sans-serif; color: #222; }
 
+div {margin: 0; padding: 0;}
+
 /* 
  * These selection declarations have to be separate
  * No text-shadow: twitter.com/miketaylr/status/12228805301
@@ -64,6 +66,8 @@ a:hover, a:active { outline: 0; }
 abbr[title] { border-bottom: 1px dotted; }
 
 b, strong { font-weight: bold; }
+
+li,p { margin: 0 0 1em; }
 
 blockquote { margin: 1em 40px; }
 
@@ -232,9 +236,9 @@ table { border-collapse: collapse; border-spacing: 0; }
 .invisible { visibility: hidden; }
 
 /* Contain floats: nicolasgallagher.com/micro-clearfix-hack/ */ 
-.clearfix:before, .clearfix:after { content: ""; display: table; }
-.clearfix:after { clear: both; }
-.clearfix { zoom: 1; }
+.group:before, .group:after { content: ""; display: table; }
+.group:after { clear: both; }
+.group { zoom: 1; }
 
 
 

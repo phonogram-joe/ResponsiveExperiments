@@ -1,0 +1,6 @@
+.map_loading {
+	opacity: 0;
+}
+.no-js .map_controls {
+	display: none;
+}
