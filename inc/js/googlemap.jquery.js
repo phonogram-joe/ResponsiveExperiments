@@ -18,8 +18,7 @@
 		CLASSES = {
 			mapLoading: 'map_loading',
 			mapActive: 'map_active',
-			mapStatic: 'map_static',
-			autoOpen: 'map_autoopen'
+			mapStatic: 'map_static'
 		}
 		API_LOAD_STATUS = STATUSES.UNLOADED,
 		GoogleMap = {},
@@ -52,6 +51,8 @@
 	 *			mousewheel scroll will not zoom the map.
 	 *		.googlemap @data-zoom: numeric zoom level to use for the map
 	 *		.googlemap @data-mapheight: height (px) for the map
+	 *		li @data-autoopen: if set to 'true' then the info window will open automatically
+	 *			for this marker. if set multiple times, will be first marker with this attr/value.
 	 *		li @data-geo: geolocation of the marker in "latitude,longitude" format
 	 *		li @data-icon: optional. image to use for marker icons on the map
 	 *		li @title: (short) title/tooltip when user hovers over the marker w/o clicking
@@ -129,8 +130,11 @@
 			this.initInfoView();
 			this.initMarkerViews();
 			if (this.openDefaultMarker()) {
-				
-			} else {
+				//may return false if there is no default marker set
+			} else if (this.markerBounds != null){
+				//if there were markers, then this.markerBounds will be an object
+				//representing the boundaries containing all the markers
+				//adjust map center/zoom to ensure all are visible
 				this.map.fitBounds(this.markerBounds);
 			}
 		},
@@ -162,7 +166,7 @@
 		},
 
 		openDefaultMarker: function() {
-			var defaultMarkerTitle = this.$wrapper.find('.' + CLASSES.autoOpen).attr('title'),
+			var defaultMarkerTitle = this.$wrapper.find('li[data-autoopen="true"]').attr('title'),
 				markerView,
 				thisMapView = this;
 			if (this.map != null && defaultMarkerTitle != null 
