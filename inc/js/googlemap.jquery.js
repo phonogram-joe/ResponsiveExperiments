@@ -68,6 +68,7 @@
 		this.map = null;
 		this.infoView = null;
 		this.markers = null;
+		this.markerBounds = null;
 		this.center = null;
 		this.isInitialized = false;
 		
@@ -109,6 +110,7 @@
 				marker = {latitude: marker[0], longitude: marker[1]};
 				markers.push(marker);
 			});
+			mapOptions.icon = '//' + window.location.hostname + this.$wrapper.find('li[data-icon]').data('icon');
 			mapOptions.markers = markers;
 			mapOptions.width = this.$mapDiv.width();
 			mapOptions.height = this.$mapDiv.height();
@@ -126,7 +128,11 @@
 			this.map = new google.maps.Map(this.$mapDiv.get(0), mapOptions);
 			this.initInfoView();
 			this.initMarkerViews();
-			this.openDefaultMarker();
+			if (this.openDefaultMarker()) {
+				
+			} else {
+				this.map.fitBounds(this.markerBounds);
+			}
 		},
 
 		initInfoView: function() {
@@ -136,6 +142,7 @@
 		initMarkerViews: function() {
 			var thisMapView = this,
 				markers = {},
+				markerBounds = new google.maps.LatLngBounds(),
 				$listMarker;
 			this.$wrapper.find('li').each(function() {
 				var listMarkerData;
@@ -147,21 +154,28 @@
 					title: $listMarker.attr('title'),
 					icon: $listMarker.data('icon')
 				};
+				markerBounds.extend(listMarkerData.position);
 				markers[listMarkerData.title] = new GoogleMap.MarkerView(thisMapView, listMarkerData);
 			});
+			this.markerBounds = markerBounds;
 			this.markers = markers;
 		},
 
 		openDefaultMarker: function() {
 			var defaultMarkerTitle = this.$wrapper.find('.' + CLASSES.autoOpen).attr('title'),
-				markerView;
+				markerView,
+				thisMapView = this;
 			if (this.map != null && defaultMarkerTitle != null 
 				&& defaultMarkerTitle.length > 0 && this.markers.hasOwnProperty(defaultMarkerTitle)) 
 			{
 				markerView = this.markers[defaultMarkerTitle];
 				this.map.setCenter(markerView.marker.getPosition());
-				this.showInfoWindow(defaultMarkerTitle);
+				window.setTimeout(function() {
+					thisMapView.showInfoWindow(defaultMarkerTitle);
+				}, 150);
+				return true;
 			}
+			return false;
 		},
 
 		updateLayout: function() {
@@ -550,6 +564,7 @@
 		 *		them to their original state.
 		 */
 		onApiError: function() {
+			if (API_LOAD_STATUS !== STATUSES.LOADING) return;
 			API_LOAD_STATUS = STATUSES.ERROR;
 			while (ALL_MAPS.length > 0) {
 				GoogleMap.utils.removeMap(ALL_MAPS.pop());
@@ -674,6 +689,11 @@
 				mapView.showInfoWindow(args[1]);
 			} else if (args[0] === "closeWindow") {
 				mapView.closeInfoWindow();
+			} else if (args[0] === "mapOptions") {
+				var options = {};
+				options.zoom = mapView.map.getZoom();
+				options.center = mapView.map.getCenter();
+				return options;
 			}
 		}
 	}
