@@ -67,18 +67,46 @@
                     });   
                 }
                 
-                // Don't behave like a regular link
-                // Stop propagation and bubbling
-                return false;
+                return base.options.deepLinking; //if no deep linking cancel the link follow
             });
             
         };
+        /*
+         *  openDefaultTab()
+         *      attempts to open the default tab for cases where either 
+         *      a) one tab has a data-autoopen=true attribute OR
+         *      b) the URL contains a hash tag matching the ID of one of the tabs
+         *
+         *      in either of those cases, the tab to open will be opened with the
+         *      default tab-switching animation (same as if the user had clicked on
+         *      the tab). 
+         */
+        base.openDefaultTab = function() {
+            var currentHash = null,
+                $linkForHash;
+            if (base.options.deepLinking) {
+                currentHash = window.location.hash.replace('#','');
+                if (currentHash.length <= 0) currentHash = null;
+            }
+            if (currentHash == null) {
+                currentHash = base.$el.find('.tabs > *').filter('[data-autoopen="true"]').attr('id');
+            }
+            if (currentHash != null && currentHash.length > 0) {
+                $linkForHash = base.$el.find('a').filter('[href=#' + currentHash + ']');
+                if ($linkForHash.size()) {
+                    $linkForHash.trigger('click');
+                }
+            }
+            
+        }
         base.init();
+        $(document).ready(base.openDefaultTab);
     };
     
     $[PLUGIN_NAME].defaultOptions = {
         speed: 300,
-        autoload: false
+        autoload: false,
+        deepLinking: false
     };
     
     $.fn[PLUGIN_NAME] = function(options) {

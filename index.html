@@ -55,7 +55,7 @@
 
 					<p>Proin in urna et enim pellentesque scelerisque a quis urna. Ut dapibus sollicitudin mi ac laoreet. Vivamus vestibulum metus a nulla adipiscing gravida vitae quis diam. Aenean a orci sit amet velit euismod interdum nec vitae nulla. Proin malesuada lobortis tincidunt. Mauris enim enim, pulvinar quis pretium id, condimentum sed sem. Nunc vel ante ante. In eu arcu leo, a venenatis nisi. Phasellus porttitor tortor vitae elit semper porta pharetra eu nulla. Quisque facilisis semper dolor quis condimentum. Fusce sed nunc vel nunc tincidunt commodo. Sed sem tellus, dictum quis aliquet a, aliquam non ligula. Vivamus convallis, massa a mollis luctus, tellus nisl aliquam mi, quis hendrerit tortor urna in lacus. Etiam posuere scelerisque vulputate.</p>
 				</div>
-				<div id="css" class="inactive">
+				<div id="css" class="inactive" data-autoopen="false">
 					Tabs basic styling derives from these simple rules:
 					...
 					<p>Praesent mauris velit, sagittis a congue quis, ultrices at massa. Morbi a diam ut purus porta euismod. Ut tincidunt dapibus molestie. Integer ut metus turpis. Phasellus at dui eget augue dictum placerat non at ligula. Pellentesque quis nisi non libero fringilla laoreet. Cras porttitor aliquet odio, ac laoreet tellus aliquam eu. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nam sed elit ultrices orci pulvinar rhoncus nec rhoncus ipsum. Fusce sed dignissim enim. Etiam at orci mollis tellus condimentum tincidunt. Pellentesque dictum libero a massa lacinia eu porta diam bibendum. Sed porta consectetur lacus non ultricies. Nam ac erat lorem.</p>
@@ -141,7 +141,7 @@
 	</script>
 	<script src="inc/js/tab_group.jquery.js" data-autoload="false" data-speed="300">
 		//#tabOne has class 'tab_group' so could eliminate this line with data-autload="true"
-		$('#tabOne').tab_group();
+		$('#tabOne').tab_group({deepLinking: false});
 	</script>
 	<script src="inc/js/googlemap-tab_group.jquery.js"></script>
 	<script src="inc/js/googlemap-jqueryui_tabs.jquery.js"></script>
