@@ -1,6 +1,14 @@
 /*
 	Copyright Joseph C. Savona 2011-2012
 	redistribution or use without author's permission is NOT allowed.
+
+    * depends on jQuery 1.7+ and underscore 1.2+
+    * any javscript included within the body of the script tag that refers to this file
+        will be executed (eval'ed) when the script loads and $(document).ready event
+        fires
+    * if the script tag that refers to this file has an attribute/value 
+        data-autoload="true", then any DOM nodes with a class of 'googlemap'
+        will automaticaly have the plugin effect applied at jQuery ready event
 */
 (function($) {
 	var context = this,
@@ -607,7 +615,7 @@
 		 */
 		addMap: function($wrapper) {
 			//prevent double-init for given dom node
-			if (typeof $wrapper.data(PLUGIN_NAME) && $wrapper.data(PLUGIN_NAME) != null) {
+			if (typeof $wrapper.data(PLUGIN_NAME) != 'undefined' && $wrapper.data(PLUGIN_NAME) != null) {
 				$wrapper.data(PLUGIN_NAME).init();
 				return;
 			}
