@@ -68,7 +68,7 @@
 				<div id="maptab" class="inactive">
 					<div id="mapInTab" class="googlemap" data-noscroll="noscroll" data-center="34.394299,132.457901" data-zoom="14" data-mapheight="400">
 						<ul>
-							<li data-geo="34.409506,132.450528" data-icon="inc/images/maps/train_icon-32.png" title="横川駅">
+							<li data-autoopen="true" data-geo="34.409506,132.450528" data-icon="inc/images/maps/train_icon-32.png" title="横川駅">
 								<div style="width: 250px; max-height: 200px; overflow: auto;">
 								<p><a href="http://ja.wikipedia.org/wiki/%E6%A8%AA%E5%B7%9D%E9%A7%85_(%E5%BA%83%E5%B3%B6%E7%9C%8C)"><b>横川駅</b></a></p>
 								<p>横川駅（よこがわえき）は、広島県広島市西区横川町三丁目にある、西日本旅客鉄道（JR西日本）・広島電鉄の駅・電停。広島電鉄では「駅」も正式電停名に入り、横川駅電停（よこがわえきでんてい）となる。</p>
@@ -143,6 +143,8 @@
 		//#tabOne has class 'tab_group' so could eliminate this line with data-autload="true"
 		$('#tabOne').tab_group();
 	</script>
+	<script src="inc/js/googlemap-tab_group.jquery.js"></script>
+	<script src="inc/js/googlemap-jqueryui_tabs.jquery.js"></script>
 <!-- DISABLE GOOGLE ANALYTICS
 <script>
 	var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']]; // Change UA-XXXXX-X to be your site's ID

@@ -66,6 +66,7 @@
 		this.$wrapper = $wrapper;
 		this.$mapDiv = $('<div></div>');
 		this.$mapDiv.height(this.$wrapper.data('mapheight'));
+		this.updateLayout();
 		this.map = null;
 		this.infoView = null;
 		this.markers = null;
@@ -77,25 +78,22 @@
 	}
 	GoogleMap.MapView.prototype = {
 		init: function() {
-			var $parentTab,
-				isDynamic = GoogleMap.utils.useDynamicMaps();
-			this.updateLayout();
+			var isDynamic = GoogleMap.utils.useDynamicMaps();
 			
-			if (this.$wrapper.is(':hidden') && isDynamic) {
-				$parentTab = this.$wrapper.parents('.tab_group .tabs > div');
-				if ($parentTab.size()) {
-					//$parentTab.height(this.$mapDiv.height());
-					$parentTab.on('tabshown:tab_group', _.bind(this.init, this));
-					return;
-				}
-			}
+			//google maps can fail to initialize if the root div is hidden
+			//(size cannot be determined properly). abort if using
+			//dynamic maps and the root div is not visible
+			if (this.$wrapper.is(':hidden') && isDynamic) return;
+			//skip duplicate initialization
 			if (this.isInitialized) return;
 			this.isInitialized = true;
+			
 			this.$wrapper.removeClass(CLASSES.mapLoading);
 			this.$wrapper.addClass(CLASSES.mapActive);
 			this.$wrapper.children().hide();
 			this.$wrapper.append(this.$mapDiv);
 			
+			this.updateLayout();
 			if (isDynamic) {
 				this.initMap();
 			} else {
@@ -523,6 +521,14 @@
 				}
 			}
 			return url;
+		},
+
+		eachMap: function(callback) {
+			var mapIndex,
+				mapCount = ALL_MAPS.length;
+			for (mapIndex = 0; mapIndex < mapCount; mapIndex++) {
+				callback(ALL_MAPS[mapIndex]);
+			}
 		},
 
 		/*
