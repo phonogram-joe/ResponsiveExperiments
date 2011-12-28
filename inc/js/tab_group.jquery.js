@@ -20,7 +20,25 @@
     /*
      *  TabGroup.TabView
      *      class representing a tab group including its nav section, tab blocks,
-     *      and the associated behaviors/options.
+     *      and the associated behaviors/options. html structure should be as follows:
+     *
+     *      <div id="tabOne" class="tab_group">
+     *          <ul class="tab_nav group">
+     *              <li><a href="#html" class="active">HTML</a></li>
+     *              <li><a href="#css">Styles</a></li>
+     *          </ul>
+     *          <div class="tabs">
+     *              <div id="html">...</div>
+     *              <div id="css">...</div>
+     *          </div>
+     *      </div>
+     *
+     *      The <ul> with <li> containing <a> tags is required. All other tags
+     *      can be of any tag type, so long as they have the appropriate class
+     *      and they are set to display:block. 
+     *
+     *      The href of the .tab_nav_group's <a> tags should match up with the
+     *      id of the children of the .tabs container
      */
     TabGroup.TabView = function($root, options) {
         _.bindAll(this, 'onNavClick', 'onReady');
@@ -40,7 +58,7 @@
         });
 
         this.$nav.on('click', 'li a', this.onNavClick);
-        if (this.options.deepLinking) {
+        if (this.options.openToHash) {
             $(document).ready(this.onReady);
         }
     }
@@ -57,12 +75,12 @@
                 thisTabGroup = this,
                 fadeOutSpeed = Modernizr.opacity ? this.options.speed : 0;
             //do not switch if already in process of animated switch
-            if (this.$tabs.children().filter(':animated').size()) return;
+            if (this.$tabs.children().filter(':animated').size()) return false;
 
             $currentTab = this.$currentTab;
             $newTab = tabId instanceof $ ? tabId : this.$tabs.find('#' + tabId);
             //bail out if there is no tab with matching ID or current/new are same
-            if (!$newTab.size() || $currentTab.is($newTab)) return;
+            if (!$newTab.size() || $currentTab.is($newTab)) return false;
             $currentListItem = this.$nav.find('li.active');
             $newListItem = this.$nav.find('a').filter('[href=#' + tabId + ']').parent();
 
@@ -104,6 +122,7 @@
                 $newTab.stop(true,true).fadeIn(0);
             }
             this.$currentTab = $newTab;
+            return true;
         },
 
         /*
@@ -186,6 +205,7 @@
         speed: 300,
         autoload: false,
         deepLinking: false,
+        openToHash: true,
         animateOnClick: true,
         animateOnSelect: false,
         animateOnDeepLink: false
