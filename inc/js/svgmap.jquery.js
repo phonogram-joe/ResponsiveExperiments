@@ -90,6 +90,11 @@
     }
 
     $(document).ready(function() {
-        loadFromSVG($('#svgmap'), $('#hiroshima_map_svg'));
+        $.ajax('map.svg', {
+            dataType: 'xml',
+            success: function(data) {
+                loadFromSVG($('#svgmap'), $(data).find('svg'));
+            }
+        });
     });
 })(jQuery, Raphael);
