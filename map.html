@@ -37,7 +37,7 @@
 		
 		<p>SVG-based (Vector Graphics) interactive maps.</p>
 
-		<div id="svgmap"></div>
+		<div id="svgmap" data-mapurl="map.svg"></div>
 	</article>
 
 	<section id="sidebar">
@@ -55,7 +55,23 @@
 	<script src="inc/js/libs/jquery-1.7.1.js"></script>
 	<script src="inc/js/libs/underscore-1.2.3.min.js"></script>
 	<script src="inc/js/libs/raphael.min.js"></script>
-	<script src="inc/js/svgmap.jquery.js"></script>
+	<script src="inc/js/svgmap.jquery.js">
+		$('#svgmap').svgmap({
+	        pathAttrs: {
+	            fill: '#d7f3f6', //set from SVG
+	            stroke: '#666',
+	            'stroke-opacity': 1,
+	            'stroke-width': 1,
+	            'stroke-linejoin': 'round'
+	        },
+	        onHoverAttrs: {
+	        	fill: '#0080ff'
+	        },
+	        onClickAttrs: {
+	        	fill: '#ccc'
+	        }
+	    });
+	</script>
 <!-- DISABLE GOOGLE ANALYTICS
 <script>
 	var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']]; // Change UA-XXXXX-X to be your site's ID
