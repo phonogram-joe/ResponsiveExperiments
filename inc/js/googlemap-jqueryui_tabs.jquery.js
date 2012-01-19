@@ -1,3 +1,8 @@
+/*
+    http://github.com/phonogram-joe/ResponsiveExperiments
+    Copyright 2012 Joe Savona
+    Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
+*/
 (function($) {
 	var context = this;
 

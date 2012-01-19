@@ -1,6 +1,7 @@
 /*
-	Copyright Joseph C. Savona 2011-2012
-	redistribution or use without author's permission is NOT allowed.
+    http://github.com/phonogram-joe/ResponsiveExperiments
+    Copyright 2012 Joe Savona
+    Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
 
     * depends on jQuery 1.7+ and underscore 1.2+
     * any javscript included within the body of the script tag that refers to this file

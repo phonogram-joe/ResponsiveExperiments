@@ -1,3 +1,8 @@
+/*
+ *  http://github.com/phonogram-joe/ResponsiveExperiments
+ *  Copyright 2012 Joe Savona
+ *  Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
+ */
 (function($, Raphael) {
     var PLUGIN_NAME = 'svgmap',
         SVG_DATA_ATTR_NAME = 'mapurl',

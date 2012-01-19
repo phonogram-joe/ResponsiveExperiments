@@ -1,6 +1,7 @@
 /*
-    Copyright Joseph C. Savona 2011-2012
-    redistribution or use without author's permission is NOT allowed.
+    http://github.com/phonogram-joe/ResponsiveExperiments
+    Copyright 2012 Joe Savona
+    Licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php)
 
     * depends on jQuery 1.7+ and underscore 1.2+
     * any javscript included within the body of the script tag that refers to this file
@@ -132,7 +133,7 @@
          *      matches a tab ID.
          *
          *      by default, the switch will be non-animated. to animate, set
-         *      setting option 'animateOnDeepLink' to true
+         *      option 'animateOnDeepLink' to true
          */
         onReady: function() {
             this.activateTab(window.location.hash.replace('#',''), this.options.animateOnDeepLink);
@@ -261,6 +262,8 @@
                 }
             }
         }
+        return this; //in case none of the above criteria match, just return the current jQuery object
+                    //to enable chaining
     };
 
     /*
